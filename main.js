@@ -179,7 +179,7 @@ startButton.addEventListener('click',()=>{
             updateDisplay()
         }
 
-    }, 0.1);
+    }, 1000);
 })
 
 stopButton.addEventListener('click',()=>{
