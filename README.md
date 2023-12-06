@@ -1,1 +1,1 @@
-## simple pomodoro timer project
+## simple pomodoro timer 
