@@ -1,143 +1,139 @@
-/* @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap'); */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap');
 
-:root.pomodoro {
-    /* font-family: 'Poppins', sans-serif; */
-    --bg-primary: #ed80d1;
-    --bg-secondary: #EDF2F4;
-    --fg-primary: #c168ab;
-    --border: #181818;
-    --shadow: #2B2D42;
-    --dimed: #af5f9b;
-    transition: all 0.3s ease-in-out;
+
+
+/* mode color themes */
+
+:root.colors-pomodoro {
+    --bg-color: #151515;
+    --shadow-color: #383838;
+    --text-color: #151515;
+    --primary-color: #DA627D;
+    --secondary-color: #A53860;
+    --accent-color: #FFA5AB;
+    --active-color: #ebadb1;
 }
 
-:root.short {
-    /* font-family: 'Poppins', sans-serif; */
-    --bg-primary: #7eddb4;
-    --bg-secondary: #EDF2F4;
-    --fg-primary: #6dbc9a;
-    --border: #181818;
-    --shadow: #2B2D42;
-    --dimed: #5b9e81;
-    transition: all 0.3s ease-in-out;
+:root.colors-short-break {
+    --bg-color: #151515;
+    --shadow-color: #383838;
+    --text-color: #151515;
+    --primary-color: #C8B6FF;
+    --secondary-color: #8D93C1;
+    --accent-color: #BBD0FF;
+    --active-color: #ccdaf9;
 }
 
-:root.long {
-    /* font-family: 'Poppins', sans-serif; */
-    --bg-primary: #78a3d3;
-    --bg-secondary: #EDF2F4;
-    --fg-primary: #6a8eb7;
-    --border: #181818;
-    --shadow: #2B2D42;
-    --dimed: #577496;
-    transition: all 0.3s ease-in-out;
+:root.colors-long-break {
+    --bg-color: #151515;
+    --shadow-color: #383838;
+    --text-color: #151515;
+    --primary-color: #96E072;
+    --secondary-color: #3DA35D;
+    --accent-color: #E8FCCF;
+    --active-color: #eafad5;
+}
+
+html, body {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Poppins', sans-serif;
 }
 
 * {
-    box-sizing: border-box;
-    color: white;
-    text-shadow: 0px 0px 7px #000000;
+    box-sizing: inherit;
+    transition: all 0.03s linear;
+}
+/* main and card styles */
+
+h1 {
+    position: absolute;
 }
 
-.indented {
-    box-shadow: 0px 0px 0px 2px var(--shadow) inset;
-}
+.main {
+    width: 100%;
+    height: 100vh;
 
-body, html {
-    margin: 0;
-    padding: 0;
-    background-color: var(--bg-secondary);
-}
-
-main {
     display: flex;
-    flex-direction: column;
     justify-content: center;
     align-items: center;
-    height: 98vh;
 }
 
 .card {
-    width: 20%;
-    height: 70%;
-    border: 3px solid var(--border);
-    display: flex;
-    justify-content: center;
-    flex-direction: column;
-    background-color: var(--bg-primary);
-    box-shadow: 5px 5px 0px 3px var(--shadow);
-    position: relative;
+    background-color: var(--secondary-color);
+    width: 26%;
+    height: 67%;
+    border-radius: 40px;
+    box-shadow: 0px 6px 0px 7px var(--shadow-color);
 }
 
-.modes {
+/* card top: timer mode buttons */
+
+.card-top {
+    height: 20%;
     display: flex;
     justify-content: space-evenly;
-    height: 10%;
-    padding: 10px;
+    align-items: flex-end;
 }
 
-.modes > button {
-    border: 2px solid var(--border);
-    width: 100%;
-    margin: 5px;
-    height: 100%;
-    background-color: var(--fg-primary);
-    font-size: 1rem;
-    transition: all 0.1s ease-in-out;
+.mode {
+    border-radius: 40px;
+    width: 26%;
+    height: 75%;
+    background-color: var(--primary-color);
+    box-shadow: 0px 6px 0px 7px var(--shadow-color);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 3rem;
+    font-weight: 600;
     cursor: pointer;
 }
 
-.modes > button:hover {
-    background-color: var(--dimed);
+.mode:hover {
+    background-color: var(--active-color);
 }
 
-.panel {
+/* card bottom: display and control button */
+
+.card-bottom {
+    height: 80%;
     display: flex;
     flex-direction: column;
-    align-items: flex-end;
-    width: 100%;
-    height: 90%;
-    padding: 10px;
+    justify-content: space-evenly;
+    align-items: center;
 }
 
-.timer {
-    width: 100%;
-    height: 70%;
-    border: 2px solid var(--border);
-    margin-bottom: 10px;
+.display {
+    border-radius: 40px;
+    width: 90%;
+    height: 50%;
+    background-color: var(--accent-color);
     display: flex;
     justify-content: center;
     align-items: center;
-    background-color: var(--fg-primary);
-    font-size: 4rem;
-    font-weight: 600;
-    position: relative;
+    font-size: 5rem;
+    font-weight: 600;   
+    box-shadow: inset 0px 0px 0px 7px var(--shadow-color);
 }
 
-#minutes {
-    position: absolute;
-    left: 20%;
-}
-
-#seconds {
-    position: absolute;
-    right: 20%;
-}
-
-.control-btn {
-    width: 100%;
-    height: 30%;
-    border: 2px solid var(--border);
+.control-button {
+    border-radius: 40px;
+    width: 90%;
+    height: 35%;
+    background-color: var(--primary-color);
+    box-shadow: 0px 6px 0px 7px var(--shadow-color);
     display: flex;
     justify-content: center;
     align-items: center;
-    background-color: var(--fg-primary);
-    font-size: 1.5rem;
+    font-size: 3rem;
     font-weight: 600;
-    transition: all 0.1s ease-in-out;
     cursor: pointer;
 }
 
-.control-btn:hover {
-    background-color: var(--dimed);
+.control-button:hover {
+    background-color: var(--accent-color);
 }
+
+

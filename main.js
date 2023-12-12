@@ -1,205 +1,313 @@
 
-// variables 
+// IMPORTS AND VARIABLES
+import buttonEffectDown from "./modules/buttonEffectDown.js"
+import buttonEffectUp from "./modules/buttonEffectUp.js"
+
 const clickSound = new Audio('./files/button_click.mp3')
 const clickSound2 = new Audio('./files/button_click_2.wav')
 const timeEndSound = new Audio('./files/time_end.wav')
 
 const root = document.querySelector(':root')
-root.setAttribute('class','pomodoro')
 
-let timer;
-let onBreak = false;
-let onLongBreak = false;
-let pomodoroCount = 0;
+let pomodorBgImage = 'url(./files/pomodoro-blob.svg)' 
+let shortBreakBgImage = 'url(./files/short-blob.svg)'
+let longBreakBgImage = 'url(./files/long-blob.svg)'
+const body = document.querySelector('body')
 
-let minutes = 25;
-let seconds = 0;
-let minutesDisplay = document.querySelector('#minutes')
-let secondsDisplay = document.querySelector('#seconds')
+const modePomodoroBtn = document.querySelector('.mode-pomodoro')
+const modeShortBtn = document.querySelector('.mode-short-break')
+const modeLongBtn = document.querySelector('.mode-long-break')
 
-// top buttons
-const pomodoroTopButton = document.querySelector('#pom-btn')
-const shortTopButton = document.querySelector('#shB-btn')
-const longTopButton = document.querySelector('#lngB-btn')
+const controlButtonStart = document.querySelector('.control-button-start')
+const controlButtonPause = document.querySelector('.control-button-pause')
+const controlButtonResume = document.querySelector('.control-button-resume')
+const controlButtonShort = document.querySelector('.control-button-short')
+const controlButtonLong = document.querySelector('.control-button-long')
+const controlButtonPomodoro = document.querySelector('.control-button-pomodoro')
 
-pomodoroTopButton.setAttribute('class', 'indented')
+let pomodoros = 3;
+let onShortBreak;
+let onLongBreak;
 
-// control buttons
-const startButton = document.querySelector('.start-btn')
-const stopButton = document.querySelector('.stop-btn')
-const breakButton = document.querySelector('.break-btn')
-const pomodoroButton = document.querySelector('.pomo-btn')
+// ONLOAD
+window.addEventListener("load", () => {
+    changeMode('pomodoro')
+    buttonEffectUp('short')
+    buttonEffectUp('long')
+    buttonEffectDown('pomodoro')
+});
 
-function controlButtonDisplay(controlButton) {
-    if (controlButton === 'start') {
-        startButton.setAttribute('style', 'display: flex')
-        stopButton.setAttribute('style', 'display: none')
-        breakButton.setAttribute('style', 'display: none')
-        pomodoroButton.setAttribute('style', 'display: none')
-    } else if (controlButton === 'stop') {
-        startButton.setAttribute('style', 'display: none')
-        stopButton.setAttribute('style', 'display: flex')
-        breakButton.setAttribute('style', 'display: none')
-        pomodoroButton.setAttribute('style', 'display: none')
-    } else if (controlButton === 'break') {
-        startButton.setAttribute('style', 'display: none')
-        stopButton.setAttribute('style', 'display: none')
-        breakButton.setAttribute('style', 'display: flex')
-        pomodoroButton.setAttribute('style', 'display: none')
-    } else if (controlButton === 'pomodoro') {
-        startButton.setAttribute('style', 'display: none')
-        stopButton.setAttribute('style', 'display: none')
-        breakButton.setAttribute('style', 'display: none')
-        pomodoroButton.setAttribute('style', 'display: flex')
+// TIMER FUNCTIONS
+
+let startTime;
+let pauseStartTime;
+let isTimerPaused = false;
+
+let timerInterval;
+let displayUpdateInterval;
+let display = document.querySelector('.display');
+let minutesToDisplay;
+let secondsToDisplay;
+
+let elapsedMinutes = 0;
+let elapsedSeconds = 0;
+
+let minutesToRun;
+let secondsToRun;
+
+// defines the timer and sets intervals
+function timer() {
+    secondsToRun = minutesToRun * 60
+    
+    timerInterval = setInterval(() => {
+        if (!isTimerPaused) {
+            let now = new Date().getTime();
+            let elapsed;
+            
+            if (pauseStartTime) {
+                elapsed = (now - pauseStartTime) / 1000;
+                pauseStartTime = null;
+            } else {
+                elapsed = (now - startTime) / 1000;
+            }
+
+            elapsedSeconds = Math.trunc(elapsed);
+            elapsedMinutes = Math.trunc(elapsedSeconds / 60);
+        }
+        if (secondsToRun === elapsedSeconds) {
+            if (onShortBreak) {
+                stopTimer()
+                timeEndSound.play()
+                controlButtonPause.setAttribute('style','display:none')
+                controlButtonPomodoro.setAttribute('style','display:flex')
+            } else if (onLongBreak) {
+                stopTimer()
+                timeEndSound.play()
+                controlButtonPause.setAttribute('style','display:none')
+                controlButtonPomodoro.setAttribute('style','display:flex')
+            } else if (!onShortBreak && !onLongBreak) {
+                pomodoros += 1;
+                if (pomodoros === 4) {
+                    pomodoros = 0
+                    stopTimer()
+                    timeEndSound.play()
+                    controlButtonPause.setAttribute('style', 'display:none')
+                    controlButtonStart.setAttribute('style','display:none')
+                    controlButtonLong.setAttribute('style', 'display:flex')
+                } else if (pomodoros < 4) {
+                    console.log('im here!')
+                    stopTimer()
+                    timeEndSound.play()
+                    controlButtonPause.setAttribute('style', 'display:none')
+                    controlButtonShort.setAttribute('style', 'display:flex')
+                }
+            }
+            
+
+        }
+    }, 100);
+
+    displayUpdateInterval = setInterval(() => {
+        let remainingSeconds = secondsToRun - elapsedSeconds;
+        minutesToDisplay = Math.trunc(remainingSeconds / 60);
+        secondsToDisplay = remainingSeconds % 60;
+
+        let displayMinutes = minutesToDisplay < 10 ? '0' + minutesToDisplay : minutesToDisplay;
+        let displaySeconds = secondsToDisplay < 10 ? '0' + secondsToDisplay : secondsToDisplay;
+
+        display.textContent = displayMinutes + ' : ' + displaySeconds; 
+    }, 1000);
+
+}
+
+// starts previously defined Timer()
+function startTimer() {
+    if (!startTime) {
+        startTime = new Date().getTime();
+        timer();
     }
 }
 
-// mode functions
-function updateInitialDisplay(mode) {
-    clearInterval(timer)
-    if (mode === 'pomodoro') {
-        minutes = 25;
-        seconds = 0;
-        minutesDisplay.textContent = minutes
-        secondsDisplay.textContent = seconds + '0'
-    } else if (mode === 'shortBreak') {
-        minutes = 5;
-        seconds = 0;
-        minutesDisplay.textContent = '0' + minutes
-        secondsDisplay.textContent = seconds + '0'
-    } else if (mode === 'longBreak') {
-        minutes = 15;
-        seconds = 0;
-        minutesDisplay.textContent = minutes
-        secondsDisplay.textContent = seconds + '0'
+function pauseTimer() {
+    if (!isTimerPaused) {
+        isTimerPaused = true;
+        pauseStartTime = new Date().getTime();
     }
+    clearInterval(displayUpdateInterval)
 }
 
-function displayMode(mode) {
-    if (mode === 'pomodoro') {
-        root.setAttribute('class','pomodoro')
-        pomodoroTopButton.setAttribute('class','indented')
-        shortTopButton.removeAttribute('class','indented')
-        longTopButton.removeAttribute('class','indented')
-    } else if (mode === 'shortBreak') {
-        root.setAttribute('class','short')
-        pomodoroTopButton.removeAttribute('class', 'indented')
-        shortTopButton.setAttribute('class','indented')
-        longTopButton.removeAttribute('class','indented')
-    } else if (mode === 'longBreak') {
-        root.setAttribute('class','long')
-        pomodoroTopButton.removeAttribute('class', 'indented')
-        shortTopButton.removeAttribute('class','indented')
-        longTopButton.setAttribute('class','indented')
+function resumeTimer() {
+    if (isTimerPaused) {
+        isTimerPaused = false;
+        let now = new Date().getTime();
+        let pauseDuration = (now - pauseStartTime) / 1000;
+        startTime += pauseDuration * 1000;
+        pauseStartTime = null;
     }
+    timer()
 }
 
+function stopTimer() {
+    clearInterval(timerInterval);
+    clearInterval(displayUpdateInterval);
+    display.textContent = '00:00'
+    startTime = null;
+    pauseStartTime = null;
+    isTimerPaused = false;
+}
+
+// MODE CONTROLS
 function changeMode(mode) {
     if (mode === 'pomodoro') {
-        displayMode('pomodoro')
-        updateInitialDisplay('pomodoro')
-        controlButtonDisplay('start')
-    } else if (mode === 'shortBreak') {
-        onBreak = true
-        displayMode('shortBreak')
-        updateInitialDisplay('shortBreak')
-        controlButtonDisplay('start')
-    } else if (mode === 'longBreak') {
-        displayMode('longBreak')
-        updateInitialDisplay('longBreak')
-        controlButtonDisplay('start')
+        controlButtonStart.setAttribute('style','display:flex')
+        controlButtonPause.setAttribute('style','display:none')
+        controlButtonResume.setAttribute('style','display:none')
+        controlButtonShort.setAttribute('style','display:none')
+        controlButtonLong.setAttribute('style','display:none')
+        controlButtonPomodoro.setAttribute('style','display:none')
+
+        stopTimer()
+        minutesToRun = 25;
+        display.textContent = `${minutesToRun} : 00`
+        root.setAttribute('class', 'colors-pomodoro')
+        body.setAttribute('style',`background-image: ${pomodorBgImage}`)
+    } else if (mode === 'short') {
+        controlButtonStart.setAttribute('style', 'display:flex')
+        controlButtonPause.setAttribute('style','display:none')
+        controlButtonResume.setAttribute('style','display:none')
+        controlButtonShort.setAttribute('style','display:none')
+        controlButtonLong.setAttribute('style','display:none')
+        controlButtonPomodoro.setAttribute('style','display:none')
+
+        stopTimer()
+        minutesToRun = 5;
+        display.textContent = `0${minutesToRun} : 00`
+        root.setAttribute('class','colors-short-break')
+        body.setAttribute('style',`background-image: ${shortBreakBgImage}`)
+    } else if (mode === 'long') {
+        controlButtonStart.setAttribute('style', 'display:flex')
+        controlButtonPause.setAttribute('style','display:none')
+        controlButtonResume.setAttribute('style','display:none')
+        controlButtonShort.setAttribute('style','display:none')
+        controlButtonLong.setAttribute('style','display:none')
+        controlButtonPomodoro.setAttribute('style','display:none')
+
+        stopTimer()
+        minutesToRun = 15;
+        display.textContent = `${minutesToRun} : 00`
+        root.setAttribute('class','colors-long-break')
+        body.setAttribute('style',`background-image: ${longBreakBgImage}`)
+    }
+}; changeMode('pomodoro')
+
+function switchMode(mode) {
+    if (mode === 'pomodoro') {
+        changeMode(mode)        
+        changeMode('pomodoro')
+        buttonEffectUp('short')
+        buttonEffectUp('long')
+        buttonEffectDown('pomodoro')
+    } else if (mode === 'short') {
+        changeMode(mode)        
+        changeMode('short')
+        buttonEffectUp('long')
+        buttonEffectUp('pomodoro')
+        buttonEffectDown('short')
+    } else if (mode === 'long') {
+        changeMode(mode)        
+        changeMode('long')
+        buttonEffectUp('pomodoro')
+        buttonEffectUp('short')
+        buttonEffectDown('long')
     }
 }
 
-function updateDisplay() {
-    if (minutes < 10) {
-        minutesDisplay.textContent = '0' + minutes
-        if (seconds < 10) {
-            secondsDisplay.textContent = '0' + seconds
-        } else {
-            secondsDisplay.textContent = seconds
-        }
-    } else if (seconds < 10) {
-        minutesDisplay.textContent = minutes
-        secondsDisplay.textContent = '0' + seconds
-    } else {
-        minutesDisplay.textContent = minutes
-        secondsDisplay.textContent = seconds
-    }
-
-}
-
-// event listeners
-pomodoroTopButton.addEventListener('click',()=>{
-    changeMode('pomodoro')
+// EVENT LISTENERS
+modePomodoroBtn.addEventListener('click',()=>{
     clickSound2.play()
+    switchMode('pomodoro') 
 })
 
-shortTopButton.addEventListener('click',()=>{
-    changeMode('shortBreak')
+modeShortBtn.addEventListener('click',()=>{
     clickSound2.play()
+    switchMode('short')
 })
 
-longTopButton.addEventListener('click',()=>{
-    changeMode('longBreak')
+modeLongBtn.addEventListener('click',()=>{
     clickSound2.play()
+    switchMode('long') 
 })
 
-startButton.addEventListener('click',()=>{
-    controlButtonDisplay('stop')
+// event listeners 
+
+controlButtonStart.addEventListener('mousedown',()=>{
     clickSound.play()
-    // timer functionality
-    timer = setInterval(() => {
-        if (minutes === 0 && seconds === 0) {
-            timeEndSound.play()
-           if (onBreak === false && onLongBreak === false) {
-               pomodoroCount += 1
-               clearInterval(timer)
-               if (pomodoroCount < 4) {
-                   controlButtonDisplay('break') 
-                   onBreak = true
-               } else if (pomodoroCount === 4) {
-                   controlButtonDisplay('break') 
-                   pomodoroCount = 0
-                   onLongBreak = true;
-               }
-           } else if (onBreak === true || onLongBreak === true) {
-               clearInterval(timer)
-               controlButtonDisplay('pomodoro') 
-               onBreak = false
-               onLongBreak = false
-           }
-
-        } else if (seconds === 0) {
-            minutes -= 1
-            seconds = 59
-            updateDisplay()
-        } else {
-            seconds -= 1
-            updateDisplay()
-        }
-
-    }, 1000);
+    startTimer()
+    buttonEffectDown('control-start')
+    controlButtonStart.addEventListener('mouseup', () => {
+        buttonEffectUp('control-start')
+        controlButtonStart.setAttribute('style','display:none')
+        controlButtonPause.setAttribute('style','display:flex')
+    })
 })
 
-stopButton.addEventListener('click',()=>{
+controlButtonPause.addEventListener('mousedown',()=>{
     clickSound.play()
-    controlButtonDisplay('start')
-    clearInterval(timer)
+    pauseTimer()
+    buttonEffectDown('control-pause')
+    controlButtonPause.addEventListener('mouseup', () => {
+        buttonEffectDown('control-pause')
+        controlButtonPause.setAttribute('style', 'display:none')
+        controlButtonResume.setAttribute('style','display:flex')
+    })
 })
 
-breakButton.addEventListener('click',()=>{
+controlButtonResume.addEventListener('mousedown',() => {
     clickSound.play()
-    controlButtonDisplay('start')
-    if (onLongBreak === true) {
-        changeMode('longBreak')
-    } else {
-        changeMode('shortBreak')
-    }
+    resumeTimer()
+    buttonEffectDown('control-resume')
+    controlButtonResume.addEventListener('mouseup',() => {
+        buttonEffectUp('control-resume')
+        controlButtonResume.setAttribute('style', 'display:none')
+        controlButtonPause.setAttribute('style','display:flex')
+    })
 })
 
-pomodoroButton.addEventListener('click',()=>{
+controlButtonShort.addEventListener('mousedown',()=>{
     clickSound.play()
-    controlButtonDisplay('start')
-    changeMode('pomodoro')
+    onShortBreak = true;
+    buttonEffectDown('control-short')
+    controlButtonShort.addEventListener('mouseup',()=>{
+        buttonEffectUp('control-short')
+        switchMode('long')
+        controlButtonShort.setAttribute('style', 'display:none')
+        controlButtonStart.setAttribute('style','display:flex')
+    })
+})
+
+controlButtonPomodoro.addEventListener('mousedown',()=>{
+    clickSound.play()
+    onShortBreak = false;
+    onLongBreak = false;
+    buttonEffectDown('control-pomodoro')
+    controlButtonPomodoro.addEventListener('mouseup',()=>{
+        buttonEffectUp('control-pomodoro')
+        switchMode('pomodoro')
+        controlButtonPomodoro.setAttribute('style', 'display:none')
+        controlButtonStart.setAttribute('style','display:flex')
+    })
+})
+
+
+controlButtonLong.addEventListener('mousedown',()=>{
+    console.log('im here!!')
+    clickSound.play()
+    onLongBreak = true;
+    buttonEffectDown('control-long')
+    controlButtonLong.addEventListener('mouseup',()=>{
+        switchMode('short') 
+        buttonEffectUp('control-long')
+        controlButtonLong.setAttribute('style', 'display:none')
+        controlButtonStart.setAttribute('style','display:flex')
+    })
 })
